@@ -13,5 +13,8 @@ Deploying a Kubernetes cluster on AWS
 ## Creating the Kubernetes Cluster
     $ make build
 
+## Installing the metrics-server
+    $ make metrics
+
 ## Destroying the Kubernetes Cluster
     $ make destroy
