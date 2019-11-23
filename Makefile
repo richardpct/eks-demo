@@ -5,6 +5,8 @@ TAR             := tar
 JQ              := jq
 KUBECTL         := kubectl
 EKSCTL          := eksctl
+BUILD           := .build
+METRICS         := .metrics
 CLUSTER_NAME    := demo
 K8S_VERS        := 1.14
 NODE_GROUP_NAME := standard-workers
@@ -24,7 +26,11 @@ help: ## Show help
 	$(MAKEFILE_LIST) \
 	| grep -v AWK
 
-build: ## Build the Kubernetes cluster on AWS
+.PHONY: build
+build: $(BUILD) ## Build the Kubernetes cluster on AWS
+
+
+$(BUILD):
 	$(EKSCTL) create cluster \
 	--name $(CLUSTER_NAME) \
 	--version $(K8S_VERS) \
@@ -39,15 +45,19 @@ build: ## Build the Kubernetes cluster on AWS
 
 .PHONY: destroy
 destroy: ## Destroy the kubernetes cluster
-	if [ -f build ]; then \
+	if [ -f $(BUILD) ]; then \
 	  $(EKSCTL) delete cluster --region=$(AWS_REGION) --name $(CLUSTER_NAME); \
 	fi
 
-	@rm build
+	@rm -fv $(BUILD)
+	@rm -fv $(METRICS)
 
-metrics: DOWNLOAD_URL = $(shell $(CURL) --silent "https://api.github.com/repos/kubernetes-sigs/metrics-server/releases/latest" | $(JQ) -r .tarball_url)
-metrics: DOWNLOAD_VERSION=$(shell grep -o '[^/v]*$$' <<< $(DOWNLOAD_URL))
-metrics: build ## Install metric server
+.PHONY: metrics
+metrics: $(METRICS) ## Install metric server
+
+$(METRICS): DOWNLOAD_URL = $(shell $(CURL) --silent "https://api.github.com/repos/kubernetes-sigs/metrics-server/releases/latest" | $(JQ) -r .tarball_url)
+$(METRICS): DOWNLOAD_VERSION=$(shell grep -o '[^/v]*$$' <<< $(DOWNLOAD_URL))
+$(METRICS): $(BUILD)
 	$(CURL) -Ls $(DOWNLOAD_URL) -o $(TMP)/metrics-server-$(DOWNLOAD_VERSION).tar.gz
 	mkdir $(TMP)/metrics-server-$(DOWNLOAD_VERSION)
 	$(TAR) -xzf $(TMP)/metrics-server-$(DOWNLOAD_VERSION).tar.gz --directory $(TMP)/metrics-server-$(DOWNLOAD_VERSION) --strip-components 1
