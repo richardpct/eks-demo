@@ -59,7 +59,9 @@ $(METRICS): DOWNLOAD_URL = $(shell $(CURL) --silent "https://api.github.com/repo
 $(METRICS): DOWNLOAD_VERSION=$(shell grep -o '[^/v]*$$' <<< $(DOWNLOAD_URL))
 $(METRICS): $(BUILD)
 	$(CURL) -Ls $(DOWNLOAD_URL) -o $(TMP)/metrics-server-$(DOWNLOAD_VERSION).tar.gz
-	mkdir $(TMP)/metrics-server-$(DOWNLOAD_VERSION)
+	if [ ! -d $(TMP)/metrics-server-$(DOWNLOAD_VERSION) ]; then \
+	  mkdir $(TMP)/metrics-server-$(DOWNLOAD_VERSION); \
+	fi
 	$(TAR) -xzf $(TMP)/metrics-server-$(DOWNLOAD_VERSION).tar.gz --directory $(TMP)/metrics-server-$(DOWNLOAD_VERSION) --strip-components 1
 	$(KUBECTL) apply -f $(TMP)/metrics-server-$(DOWNLOAD_VERSION)/deploy/1.8+/
 	@touch $@
