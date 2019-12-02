@@ -16,6 +16,7 @@ NODE_MIN        := 1
 NODE_MAX        := 2
 NODE_AMI        := auto
 AWS_REGION      := eu-west-3
+SSH_PUBLIC_KEY  := $(HOME)/.ssh/id_rsa.pub
 TMP             := /tmp
 
 .PHONY: help
@@ -39,7 +40,8 @@ $(BUILD):
 	--nodes $(NODE_NB) \
 	--nodes-min $(NODE_MIN) \
 	--nodes-max $(NODE_MAX) \
-	--node-ami $(NODE_AMI)
+	--node-ami $(NODE_AMI) \
+	--ssh-access --ssh-public-key=$(SSH_PUBLIC_KEY)
 
 	@touch $@
 
